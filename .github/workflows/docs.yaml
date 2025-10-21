@@ -1,85 +1,170 @@
 name: Docs
-
 on:
-  pull_request:
   push:
     branches:
-      - nightly
       - main
-      - release/*
-  workflow_dispatch:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        python-version: ["3.11"]
-        cuda-version: ["12.6"]
-        ffmpeg-version: ["7"]
-      fail-fast: false
-    uses: pytorch/test-infra/.github/workflows/linux_job_v2.yml@main
     permissions:
-      id-token: write
       contents: read
+      id-token: write
+    steps:
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - id: measurement-6
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - id: measurement-5
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - id: measurement-4
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - id: measurement-12
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - id: measurement-10
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - id: measurement-17
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
+    strategy:
+      fail-fast: false
+      matrix:
+        cuda-version:
+          - '12.6'
+        ffmpeg-version:
+          - '7'
+        python-version:
+          - '3.11'
+    uses: pytorch/test-infra/.github/workflows/linux_job_v2.yml@main
     with:
-      runner: linux.4xlarge.nvidia.gpu
-      repository: pytorch/audio
-      upload-artifact: docs
       gpu-arch-type: cuda
       gpu-arch-version: ${{ matrix.cuda-version }}
-      timeout: 120
       job-name: docs
-
-      script: |
-        set -ex
-        # Set up Environment Variables
-        export PYTHON_VERSION="${{ matrix.python-version }}"
-        export FFMPEG_VERSION="${{ matrix.ffmpeg-version }}"
-        export CU_VERSION_WITHOUT_PERIODS="$(echo "${{ matrix.cuda-version }}" | sed 's/\.//g')"
-        export PIP_PROGRESS_BAR=off
-        export CONDA_QUIET=1
-
-        # Set UPLOAD_CHANNEL
-        if [[(${GITHUB_EVENT_NAME} = 'pull_request' && (${GITHUB_BASE_REF} = 'release'*)) || (${GITHUB_REF} = 'refs/heads/release'*) ]]; then
-          export UPLOAD_CHANNEL=test
-        else
-          export UPLOAD_CHANNEL=nightly
-        fi
-
-        echo "::group::Create conda env"
-        # Mark Build Directory Safe
-        git config --global --add safe.directory /__w/audio/audio
-        conda create -c conda-forge --strict-channel-priority -y --prefix ci_env python="${PYTHON_VERSION}" ffmpeg="${FFMPEG_VERSION}" cmake ninja
-        conda activate ./ci_env
-        conda info
-        python -m pip install --upgrade pip
-        echo "::endgroup::"
-
-        echo "::group::Install PyTorch and TorchCodec"
-        PYTORCH_WHEEL_INDEX="https://download.pytorch.org/whl/${UPLOAD_CHANNEL}/cu${CU_VERSION_WITHOUT_PERIODS}"
-        python -m pip install numpy
-        python -m pip install --pre torch torchcodec --index-url="${PYTORCH_WHEEL_INDEX}"
-        python -c 'import torch; print(f"{torch.__version__}"); print(f"{torch.__file__}"); print(f"{torch.cuda.is_available()=}")'
-        echo "::endgroup::"
-
-        echo "::group::Build and install TorchAudio"
-        python -m pip install . -v --no-build-isolation
-        echo "::endgroup::"
-
-        echo "::group::Install TorchAudio documentation build requirements"
-        python -m pip install -r docs/requirements.txt -r docs/requirements-tutorials.txt
-        echo "::endgroup::"
-
-        echo "::group::Build TorchAudio documentation"
-        export BUILD_GALLERY=true
-        (cd docs && make html)
-        echo "::endgroup::"
-
-        echo "::group::Copy artifacts"
-        cp -r docs/build/html "${RUNNER_ARTIFACT_DIR}"
-
-        # On PRs we also want to upload the docs into our S3 bucket for preview.
-        if [[ ${{ github.event_name == 'pull_request' }} ]]; then
-          cp -r docs/build/html/* "${RUNNER_DOCS_DIR}"
-        fi
-        echo "::endgroup::"
+      repository: pytorch/audio
+      runner: linux.4xlarge.nvidia.gpu
+      script: "set -ex\n# Set up Environment Variables\nexport PYTHON_VERSION=\"${{\
+        \ matrix.python-version }}\"\nexport FFMPEG_VERSION=\"${{ matrix.ffmpeg-version\
+        \ }}\"\nexport CU_VERSION_WITHOUT_PERIODS=\"$(echo \"${{ matrix.cuda-version\
+        \ }}\" | sed 's/\\.//g')\"\nexport PIP_PROGRESS_BAR=off\nexport CONDA_QUIET=1\n\
+        \n# Set UPLOAD_CHANNEL\nif [[(${GITHUB_EVENT_NAME} = 'pull_request' && (${GITHUB_BASE_REF}\
+        \ = 'release'*)) || (${GITHUB_REF} = 'refs/heads/release'*) ]]; then\n  export\
+        \ UPLOAD_CHANNEL=test\nelse\n  export UPLOAD_CHANNEL=nightly\nfi\n\necho \"\
+        ::group::Create conda env\"\n# Mark Build Directory Safe\ngit config --global\
+        \ --add safe.directory /__w/audio/audio\nconda create -c conda-forge --strict-channel-priority\
+        \ -y --prefix ci_env python=\"${PYTHON_VERSION}\" ffmpeg=\"${FFMPEG_VERSION}\"\
+        \ cmake ninja\nconda activate ./ci_env\nconda info\npython -m pip install\
+        \ --upgrade pip\necho \"::endgroup::\"\n\necho \"::group::Install PyTorch\
+        \ and TorchCodec\"\nPYTORCH_WHEEL_INDEX=\"https://download.pytorch.org/whl/${UPLOAD_CHANNEL}/cu${CU_VERSION_WITHOUT_PERIODS}\"\
+        \npython -m pip install numpy\npython -m pip install --pre torch torchcodec\
+        \ --index-url=\"${PYTORCH_WHEEL_INDEX}\"\npython -c 'import torch; print(f\"\
+        {torch.__version__}\"); print(f\"{torch.__file__}\"); print(f\"{torch.cuda.is_available()=}\"\
+        )'\necho \"::endgroup::\"\n\necho \"::group::Build and install TorchAudio\"\
+        \npython -m pip install . -v --no-build-isolation\necho \"::endgroup::\"\n\
+        \necho \"::group::Install TorchAudio documentation build requirements\"\n\
+        python -m pip install -r docs/requirements.txt -r docs/requirements-tutorials.txt\n\
+        echo \"::endgroup::\"\n\necho \"::group::Build TorchAudio documentation\"\n\
+        export BUILD_GALLERY=true\n(cd docs && make html)\necho \"::endgroup::\"\n\
+        \necho \"::group::Copy artifacts\"\ncp -r docs/build/html \"${RUNNER_ARTIFACT_DIR}\"\
+        \n\n# On PRs we also want to upload the docs into our S3 bucket for preview.\n\
+        if [[ ${{ github.event_name == 'pull_request' }} ]]; then\n  cp -r docs/build/html/*\
+        \ \"${RUNNER_DOCS_DIR}\"\nfi\necho \"::endgroup::\"\n"
+      timeout: 120
+      upload-artifact: docs

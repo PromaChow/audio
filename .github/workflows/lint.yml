@@ -1,43 +1,93 @@
 name: Lint
-
 on:
   push:
-    branches: [ main ]
-  pull_request:
+    branches:
+      - main
 
 concurrency:
-  group: unit-test${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.run_number || github.ref }}
   cancel-in-progress: true
-
+  group: unit-test${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.run_number
+    || github.ref }}
 defaults:
   run:
     shell: bash -l -eo pipefail {0}
-
 jobs:
   pre-commit-checks:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.11']
     steps:
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
       - name: Check out repo
         uses: actions/checkout@v3
       - name: Setup conda env
         uses: conda-incubator/setup-miniconda@v2
         with:
-          auto-update-conda: true
-          miniconda-version: "latest"
           activate-environment: test
+          auto-update-conda: true
+          miniconda-version: latest
           python-version: ${{ matrix.python-version }}
       - name: Update pip
         run: python -m pip install --upgrade pip
+      - id: measurement-4
+        name: Record Measurement After Update pip
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Update pip
+          task: get-measurement
       - name: Install pre-commit
-        run: |
-          python -m pip install pre-commit
+        run: 'python -m pip install pre-commit
+
+          '
+      - id: measurement-6
+        name: Record Measurement After Install pre-commit
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Install pre-commit
+          task: get-measurement
       - name: Run pre-commit checks
-        run: |
-          pre-commit run --all-files
+        run: 'pre-commit run --all-files
+
+          '
+        continue-on-error: true
+      - id: measurement-8
+        name: Record Measurement After Run pre-commit checks
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Run pre-commit checks
+          task: get-measurement
       - name: Check to see what files pre-commit modified
-        run: |
-          git diff
+        run: 'git diff
+
+          '
+        continue-on-errr: true
+      - id: measurement-10
+        name: Record Measurement After Check to see what files pre-commit modified
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Check to see what files pre-commit modified
+          task: get-measurement
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - '3.11'

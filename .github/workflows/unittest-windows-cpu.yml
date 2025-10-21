@@ -1,60 +1,148 @@
 name: Unit-tests on Windows CPU
-
 on:
-  pull_request:
   push:
     branches:
-      - nightly
       - main
-      - release/*
-  workflow_dispatch:
 
 jobs:
   build:
+    steps:
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - id: measurement-6
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - id: measurement-5
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - id: measurement-4
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - id: measurement-12
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - id: measurement-10
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - id: measurement-17
+        name: Record Measurement After Save Total Energy Consumption Data
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: Save Total Energy Consumption Data
+          task: get-measurement
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
     uses: pytorch/test-infra/.github/workflows/windows_job.yml@main
     with:
       repository: pytorch/audio
       runner: windows.4xlarge
+      script: "# Mark Build Directory Safe\ngit config --global --add safe.directory\
+        \ /__w/audio/audio\n\n# Set up Environment Variables\nexport PYTHON_VERSION=\"\
+        3.11\"\nexport PIP_PROGRESS_BAR=off\nexport CONDA_QUIET=1\nunset CUDA_VERSION\n\
+        \n# Set CHANNEL\nif [[(${GITHUB_EVENT_NAME} = 'pull_request' && (${GITHUB_BASE_REF}\
+        \ = 'release'*)) || (${GITHUB_REF} = 'refs/heads/release'*) ]]; then\n  export\
+        \ UPLOAD_CHANNEL=test\nelse\n  export UPLOAD_CHANNEL=nightly\nfi\n\nexport\
+        \ TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_APPLY_CMVN_SLIDING=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_FBANK_FEATS=true\n\
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_KALDI_PITCH_FEATS=true\n\
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_MFCC_FEATS=true\nexport\
+        \ TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_SPECTROGRAM_FEATS=true\nexport\
+        \ TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_SOX=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CUDA=true\n\
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_HW_ACCEL=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_KALDI=true\n\
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_SOX=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_ON_PYTHON_310=true\n\
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_sentencepiece=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_AUDIO_OUT_DEVICE=true\n\
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MACOS=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_TEMPORARY_DISABLED=true\n\
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_QUANTIZATION=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CTC_DECODER=true\n\
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_unidecode=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_inflect=true\n\
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_pytorch_lightning=true\nexport\
+        \ TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_sentencepiece=true\n\n.github/scripts/unittest-windows/setup_env.sh\n\
+        .github/scripts/unittest-windows/install.sh\n.github/scripts/unittest-windows/run_test.sh\n"
       timeout: 180
-      script: |
-        # Mark Build Directory Safe
-        git config --global --add safe.directory /__w/audio/audio
-
-        # Set up Environment Variables
-        export PYTHON_VERSION="3.11"
-        export PIP_PROGRESS_BAR=off
-        export CONDA_QUIET=1
-        unset CUDA_VERSION
-
-        # Set CHANNEL
-        if [[(${GITHUB_EVENT_NAME} = 'pull_request' && (${GITHUB_BASE_REF} = 'release'*)) || (${GITHUB_REF} = 'refs/heads/release'*) ]]; then
-          export UPLOAD_CHANNEL=test
-        else
-          export UPLOAD_CHANNEL=nightly
-        fi
-
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_APPLY_CMVN_SLIDING=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_FBANK_FEATS=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_KALDI_PITCH_FEATS=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_MFCC_FEATS=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_SPECTROGRAM_FEATS=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_SOX=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CUDA=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_HW_ACCEL=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_KALDI=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_SOX=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_ON_PYTHON_310=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_sentencepiece=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_AUDIO_OUT_DEVICE=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MACOS=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_TEMPORARY_DISABLED=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_QUANTIZATION=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CTC_DECODER=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_unidecode=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_inflect=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_pytorch_lightning=true
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_sentencepiece=true
-
-        .github/scripts/unittest-windows/setup_env.sh
-        .github/scripts/unittest-windows/install.sh
-        .github/scripts/unittest-windows/run_test.sh

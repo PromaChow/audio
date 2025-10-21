@@ -1,74 +1,70 @@
 name: Integration tests
-
 on:
-  pull_request:
-    branches: [ main ]
-
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
-    strategy:
-      matrix:
-        python-version: ["3.11"]
-        ffmpeg-version: ["7"]
-      fail-fast: false
-    uses: pytorch/test-infra/.github/workflows/linux_job_v2.yml@main
     permissions:
-      id-token: write
       contents: read
+      id-token: write
+    steps:
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
+    strategy:
+      fail-fast: false
+      matrix:
+        ffmpeg-version:
+          - '7'
+        python-version:
+          - '3.11'
+    uses: pytorch/test-infra/.github/workflows/linux_job_v2.yml@main
     with:
-      runner: linux.12xlarge
-      repository: pytorch/audio
       gpu-arch-type: cpu
-      gpu-arch-version:
-      timeout: 120
+      gpu-arch-version: null
       job-name: linux-cpu
-
-      script: |
-        set -ex
-        # Set up Environment Variables
-        export PYTHON_VERSION="${{ matrix.python-version }}"
-        export FFMPEG_VERSION="${{ matrix.ffmpeg-version }}"
-        export PIP_PROGRESS_BAR=off
-        export CONDA_QUIET=1
-
-        # Set UPLOAD_CHANNEL
-        if [[(${GITHUB_EVENT_NAME} = 'pull_request' && (${GITHUB_BASE_REF} = 'release'*)) || (${GITHUB_REF} = 'refs/heads/release'*) ]]; then
-          export UPLOAD_CHANNEL=test
-        else
-          export UPLOAD_CHANNEL=nightly
-        fi
-
-        echo "::group::Create conda env"
-        # Mark Build Directory Safe
-        git config --global --add safe.directory /__w/audio/audio
-        conda create -c conda-forge --strict-channel-priority -y -n ci_env python="${PYTHON_VERSION}" ffmpeg="${FFMPEG_VERSION}" cmake ninja
-        conda activate ci_env
-        conda info
-        ffmpeg -version
-        python -m pip install --upgrade pip
-        # We add conda library path as otherwise torchcodec is not
-        # able to load ffmpeg shared libraries:
-        export LD_LIBRARY_PATH=${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH}
-        echo "::endgroup::"
-
-        echo "::group::Install TorchAudio integration test and PyTorch dependencies"
-        python -m pip install parameterized pytest numpy expecttest
-        echo "::endgroup::"
-
-        echo "::group::Install PyTorch and TorchCodec"
-        PYTORCH_WHEEL_INDEX="https://download.pytorch.org/whl/${UPLOAD_CHANNEL}/cpu"
-        python -m pip install --pre torch torchcodec --index-url="${PYTORCH_WHEEL_INDEX}"
-        python -c 'import torch; print(f"{torch.__version__}"); print(f"{torch.__file__}")'
-        python -c 'import torchcodec; print(f"{torchcodec.__version__}"); print(f"{torchcodec.__file__}")'
-        echo "::endgroup::"
-
-        echo "::group::Build and install TorchAudio"
-        python -m pip install . -v --no-build-isolation
-        echo "::endgroup::"
-
-        echo "::group::Run TorchAudio integration tests"
-        python -m pip install deep-phonemizer sentencepiece flashlight-text git+https://github.com/kpu/kenlm
-        pytest test/integration_tests/ -x --use-tmp-hub-dir
-        echo "::endgroup::"
+      repository: pytorch/audio
+      runner: linux.12xlarge
+      script: "set -ex\n# Set up Environment Variables\nexport PYTHON_VERSION=\"${{\
+        \ matrix.python-version }}\"\nexport FFMPEG_VERSION=\"${{ matrix.ffmpeg-version\
+        \ }}\"\nexport PIP_PROGRESS_BAR=off\nexport CONDA_QUIET=1\n\n# Set UPLOAD_CHANNEL\n\
+        if [[(${GITHUB_EVENT_NAME} = 'pull_request' && (${GITHUB_BASE_REF} = 'release'*))\
+        \ || (${GITHUB_REF} = 'refs/heads/release'*) ]]; then\n  export UPLOAD_CHANNEL=test\n\
+        else\n  export UPLOAD_CHANNEL=nightly\nfi\n\necho \"::group::Create conda\
+        \ env\"\n# Mark Build Directory Safe\ngit config --global --add safe.directory\
+        \ /__w/audio/audio\nconda create -c conda-forge --strict-channel-priority\
+        \ -y -n ci_env python=\"${PYTHON_VERSION}\" ffmpeg=\"${FFMPEG_VERSION}\" cmake\
+        \ ninja\nconda activate ci_env\nconda info\nffmpeg -version\npython -m pip\
+        \ install --upgrade pip\n# We add conda library path as otherwise torchcodec\
+        \ is not\n# able to load ffmpeg shared libraries:\nexport LD_LIBRARY_PATH=${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH}\n\
+        echo \"::endgroup::\"\n\necho \"::group::Install TorchAudio integration test\
+        \ and PyTorch dependencies\"\npython -m pip install parameterized pytest numpy\
+        \ expecttest\necho \"::endgroup::\"\n\necho \"::group::Install PyTorch and\
+        \ TorchCodec\"\nPYTORCH_WHEEL_INDEX=\"https://download.pytorch.org/whl/${UPLOAD_CHANNEL}/cpu\"\
+        \npython -m pip install --pre torch torchcodec --index-url=\"${PYTORCH_WHEEL_INDEX}\"\
+        \npython -c 'import torch; print(f\"{torch.__version__}\"); print(f\"{torch.__file__}\"\
+        )'\npython -c 'import torchcodec; print(f\"{torchcodec.__version__}\"); print(f\"\
+        {torchcodec.__file__}\")'\necho \"::endgroup::\"\n\necho \"::group::Build\
+        \ and install TorchAudio\"\npython -m pip install . -v --no-build-isolation\n\
+        echo \"::endgroup::\"\n\necho \"::group::Run TorchAudio integration tests\"\
+        \npython -m pip install deep-phonemizer sentencepiece flashlight-text git+https://github.com/kpu/kenlm\n\
+        pytest test/integration_tests/ -x --use-tmp-hub-dir\necho \"::endgroup::\"\
+        \n"
+ 

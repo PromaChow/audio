@@ -1,52 +1,81 @@
 name: Build M1 Wheels
-
 on:
-  pull_request:
   push:
     branches:
-      - nightly
       - main
-      - release/*
-    tags:
-        # NOTE: Binary build pipelines should only get triggered on release candidate builds
-        # Release candidate tags look like: v1.11.0-rc1
-        - v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+
-  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}-${{ github.ref_type == 'branch' && github.sha }}-${{ github.event_name == 'workflow_dispatch' }}
   cancel-in-progress: true
-
-permissions:
-  id-token: write
-  contents: read
-
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name
+    }}-${{ github.ref_type == 'branch' && github.sha }}-${{ github.event_name == 'workflow_dispatch'
+    }}
 jobs:
-  generate-matrix:
-    uses: pytorch/test-infra/.github/workflows/generate_binary_build_matrix.yml@main
-    with:
-      package-type: wheel
-      os: macos-arm64
-      test-infra-repository: pytorch/test-infra
-      test-infra-ref: main
   build:
+    name: ${{ matrix.repository }}
     needs: generate-matrix
+    steps:
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
     strategy:
       fail-fast: false
       matrix:
         include:
-          - repository: pytorch/audio
+          - package-name: torchaudio
+            repository: pytorch/audio
             smoke-test-script: test/smoke_test/smoke_test_no_ffmpeg.py
-            package-name: torchaudio
-    name: ${{ matrix.repository }}
     uses: pytorch/test-infra/.github/workflows/build_wheels_macos.yml@main
     with:
-      repository: ${{ matrix.repository }}
-      ref: ""
-      test-infra-repository: pytorch/test-infra
-      test-infra-ref: main
       build-matrix: ${{ needs.generate-matrix.outputs.matrix }}
-      smoke-test-script: ${{ matrix.smoke-test-script }}
-      runner-type: macos-m1-stable
       package-name: ${{ matrix.package-name }}
+      ref: ''
+      repository: ${{ matrix.repository }}
+      runner-type: macos-m1-stable
+      smoke-test-script: ${{ matrix.smoke-test-script }}
+      test-infra-ref: main
+      test-infra-repository: pytorch/test-infra
       trigger-event: ${{ github.event_name }}
+  generate-matrix:
+    steps:
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
+    uses: pytorch/test-infra/.github/workflows/generate_binary_build_matrix.yml@main
+    with:
+      os: macos-arm64
+      package-type: wheel
+      test-infra-ref: main
+      test-infra-repository: pytorch/test-infra
+permissions:
+  contents: read
+  id-token: write
