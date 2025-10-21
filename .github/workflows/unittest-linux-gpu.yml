@@ -9,34 +9,12 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    steps:
-      - name: Start Energy Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          task: start-measurement
-      - id: display-measurement
-        name: Display Energy Results
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          task: display-results
-      - name: Save Total Energy Consumption Data
-        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
-      - name: Upload Energy Consumption Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: total-energy-consumption
-          path: total_energy_consumption.json
     strategy:
       fail-fast: false
       matrix:
-        cuda-version:
-          - '12.6'
-        ffmpeg-version:
-          - '7'
-        python-version:
-          - '3.11'
+        cuda-version: ['12.6']
+        ffmpeg-version: ['7']
+        python-version: ['3.11']
     uses: pytorch/test-infra/.github/workflows/linux_job_v2.yml@main
     with:
       gpu-arch-type: cuda
@@ -44,33 +22,100 @@ jobs:
       job-name: Run tests
       repository: pytorch/audio
       runner: linux.g5.4xlarge.nvidia.gpu
-      script: "set -ex\n# Set up Environment Variables\nexport PYTHON_VERSION=\"${{\
-        \ matrix.python-version }}\"\nexport FFMPEG_VERSION=\"${{ matrix.ffmpeg-version\
-        \ }}\"\nexport CU_VERSION_WITHOUT_PERIODS=\"$(echo \"${{ matrix.cuda-version\
-        \ }}\" | sed 's/\\.//g')\"\nexport PIP_PROGRESS_BAR=off\nexport CONDA_QUIET=1\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_CUDA_SMALL_MEMORY=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_ON_PYTHON_310=true\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_TEMPORARY_DISABLED=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_SOX_DECODER=true\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_SOX_ENCODER=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_FFMPEG=true\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_demucs=true\nexport CUBLAS_WORKSPACE_CONFIG=:16:8\n\
-        \n# Set UPLOAD_CHANNEL\nif [[(${GITHUB_EVENT_NAME} = 'pull_request' && (${GITHUB_BASE_REF}\
-        \ = 'release'*)) || (${GITHUB_REF} = 'refs/heads/release'*) ]]; then\n  export\
-        \ UPLOAD_CHANNEL=test\nelse\n  export UPLOAD_CHANNEL=nightly\nfi\n\necho \"\
-        ::group::Create conda env\"\n# Mark Build Directory Safe\ngit config --global\
-        \ --add safe.directory /__w/audio/audio\nconda create -c conda-forge --strict-channel-priority\
-        \ -y --prefix ci_env python=\"${PYTHON_VERSION}\" ffmpeg=\"${FFMPEG_VERSION}\"\
-        \ cmake ninja\nconda activate ./ci_env\nconda info\npython -m pip install\
-        \ --upgrade pip\necho \"::endgroup::\"\n\necho \"::group::Install PyTorch\
-        \ and TorchCodec\"\nPYTORCH_WHEEL_INDEX=\"https://download.pytorch.org/whl/${UPLOAD_CHANNEL}/cu${CU_VERSION_WITHOUT_PERIODS}\"\
-        \npython -m pip install numpy\npython -m pip install --pre torch torchcodec\
-        \ --index-url=\"${PYTORCH_WHEEL_INDEX}\"\npython -c 'import torch; print(f\"\
-        {torch.__version__}\"); print(f\"{torch.__file__}\"); print(f\"{torch.cuda.is_available()=}\"\
-        )'\necho \"::endgroup::\"\n\necho \"::group::Build and install TorchAudio\"\
-        \npython -m pip install . -v --no-build-isolation\necho \"::endgroup::\"\n\
-        \necho \"::group::Install Python Dependencies\"\npip install parameterized\
-        \ requests coverage pytest pytest-cov scipy expecttest\necho \"::endgroup::\"\
-        \n\necho \"::group::Run tests\"\n\ndeclare -a args=(\n    '-v'\n    '--cov=torchaudio'\n\
-        \    \"--junitxml=${RUNNER_TEST_RESULTS_DIR}/junit.xml\"\n    '--durations'\
-        \ '100'\n    '-k' '(cuda or gpu) and not (torchscript and rnnt) and not torchscript_consistency'\n\
-        \    '-x'\n)\n\ncd test\npython3 -m torch.utils.collect_env\nenv | grep TORCHAUDIO\
-        \ || true\npytest \"${args[@]}\" torchaudio_unittest\ncoverage html\n"
-   
+      script: |
+        set -ex
+        export PYTHON_VERSION="${{ matrix.python-version }}"
+        export FFMPEG_VERSION="${{ matrix.ffmpeg-version }}"
+        export CU_VERSION_WITHOUT_PERIODS="$(echo "${{ matrix.cuda-version }}" | sed 's/\.//g')"
+        export PIP_PROGRESS_BAR=off
+        export CONDA_QUIET=1
+
+        # TorchAudio test skips
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_CUDA_SMALL_MEMORY=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_ON_PYTHON_310=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_TEMPORARY_DISABLED=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_SOX_DECODER=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_SOX_ENCODER=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_FFMPEG=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_demucs=true
+        export CUBLAS_WORKSPACE_CONFIG=:16:8
+
+        # Set UPLOAD_CHANNEL
+        if [[ (${GITHUB_EVENT_NAME} = 'pull_request' && (${GITHUB_BASE_REF} = 'release'*)) || (${GITHUB_REF} = 'refs/heads/release'*) ]]; then
+          export UPLOAD_CHANNEL=test
+        else
+          export UPLOAD_CHANNEL=nightly
+        fi
+
+        echo "::group::Create conda env"
+        git config --global --add safe.directory /__w/audio/audio
+        conda create -c conda-forge --strict-channel-priority -y --prefix ci_env python="${PYTHON_VERSION}" ffmpeg="${FFMPEG_VERSION}" cmake ninja
+        conda activate ./ci_env
+        conda info
+        python -m pip install --upgrade pip
+        echo "::endgroup::"
+
+        echo "::group::Install PyTorch and TorchCodec"
+        PYTORCH_WHEEL_INDEX="https://download.pytorch.org/whl/${UPLOAD_CHANNEL}/cu${CU_VERSION_WITHOUT_PERIODS}"
+        python -m pip install numpy
+        python -m pip install --pre torch torchcodec --index-url="${PYTORCH_WHEEL_INDEX}"
+        python -c 'import torch; print(f"{torch.__version__} {torch.__file__} {torch.cuda.is_available()}")'
+        echo "::endgroup::"
+
+        echo "::group::Build and install TorchAudio"
+        python -m pip install . -v --no-build-isolation
+        echo "::endgroup::"
+
+        echo "::group::Install Python Dependencies"
+        python -m pip install parameterized requests coverage pytest pytest-cov scipy expecttest
+        echo "::endgroup::"
+
+        echo "::group::Run tests"
+        declare -a args=(
+            '-v'
+            '--cov=torchaudio'
+            "--junitxml=${RUNNER_TEST_RESULTS_DIR}/junit.xml"
+            '--durations' '100'
+            '-k' '(cuda or gpu) and not (torchscript and rnnt) and not torchscript_consistency'
+            '-x'
+        )
+        cd test
+        python3 -m torch.utils.collect_env
+        env | grep TORCHAUDIO || true
+        pytest "${args[@]}" torchaudio_unittest
+        coverage html
+        echo "::endgroup::"
+
+    steps:
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+
+      - name: Run Tests
+        run: echo "Tests executed via linux_job_v2.yml script"
+
+      - id: record-measurement
+        name: Record Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: "Post Test Measurement"
+          task: get-measurement
+
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.record-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json

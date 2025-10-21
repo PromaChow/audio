@@ -9,128 +9,11 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    steps:
-      - name: Start Energy Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          task: start-measurement
-      - name: Start Energy Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          task: start-measurement
-      - name: Start Energy Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          task: start-measurement
-      - name: Start Energy Measurement
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          task: start-measurement
-      - id: display-measurement
-        name: Display Energy Results
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          task: display-results
-      - name: Save Total Energy Consumption Data
-        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
-      - id: measurement-6
-        name: Record Measurement After Save Total Energy Consumption Data
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          label: Save Total Energy Consumption Data
-          task: get-measurement
-      - id: measurement-5
-        name: Record Measurement After Save Total Energy Consumption Data
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          label: Save Total Energy Consumption Data
-          task: get-measurement
-      - id: measurement-4
-        name: Record Measurement After Save Total Energy Consumption Data
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          label: Save Total Energy Consumption Data
-          task: get-measurement
-      - name: Upload Energy Consumption Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: total-energy-consumption
-          path: total_energy_consumption.json
-      - id: display-measurement
-        name: Display Energy Results
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          task: display-results
-      - name: Save Total Energy Consumption Data
-        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
-      - id: measurement-12
-        name: Record Measurement After Save Total Energy Consumption Data
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          label: Save Total Energy Consumption Data
-          task: get-measurement
-      - id: measurement-10
-        name: Record Measurement After Save Total Energy Consumption Data
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          label: Save Total Energy Consumption Data
-          task: get-measurement
-      - name: Upload Energy Consumption Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: total-energy-consumption
-          path: total_energy_consumption.json
-      - id: display-measurement
-        name: Display Energy Results
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          task: display-results
-      - name: Save Total Energy Consumption Data
-        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
-      - id: measurement-17
-        name: Record Measurement After Save Total Energy Consumption Data
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          label: Save Total Energy Consumption Data
-          task: get-measurement
-      - name: Upload Energy Consumption Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: total-energy-consumption
-          path: total_energy_consumption.json
-      - id: display-measurement
-        name: Display Energy Results
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
-        with:
-          json-output: true
-          task: display-results
-      - name: Save Total Energy Consumption Data
-        run: echo '${{ steps.final-measurement.outputs.data-total-json }}' > total_energy_consumption.json
-      - name: Upload Energy Consumption Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: total-energy-consumption
-          path: total_energy_consumption.json
     strategy:
       fail-fast: false
       matrix:
-        ffmpeg-version:
-          - '7'
-        python-version:
-          - '3.11'
+        ffmpeg-version: ['7']
+        python-version: ['3.11']
     uses: pytorch/test-infra/.github/workflows/linux_job_v2.yml@main
     with:
       gpu-arch-type: cpu
@@ -138,41 +21,104 @@ jobs:
       job-name: linux-cpu
       repository: pytorch/audio
       runner: linux.12xlarge
-      script: "set -ex\n# Set up Environment Variables\nexport PYTHON_VERSION=\"${{\
-        \ matrix.python-version }}\"\nexport FFMPEG_VERSION=\"${{ matrix.ffmpeg-version\
-        \ }}\"\nexport PIP_PROGRESS_BAR=off\nexport CONDA_QUIET=1\n\n# Set UPLOAD_CHANNEL\n\
-        if [[(${GITHUB_EVENT_NAME} = 'pull_request' && (${GITHUB_BASE_REF} = 'release'*))\
-        \ || (${GITHUB_REF} = 'refs/heads/release'*) ]]; then\n  export UPLOAD_CHANNEL=test\n\
-        else\n  export UPLOAD_CHANNEL=nightly\nfi\n\necho \"::group::Create conda\
-        \ env\"\n# Mark Build Directory Safe\ngit config --global --add safe.directory\
-        \ /__w/audio/audio\nconda create -c conda-forge --strict-channel-priority\
-        \ -y -n ci_env python=\"${PYTHON_VERSION}\" ffmpeg=\"${FFMPEG_VERSION}\" cmake\
-        \ ninja\nconda activate ci_env\nconda info\nffmpeg -version\npython -m pip\
-        \ install --upgrade pip\n# We add conda library path as otherwise torchcodec\
-        \ is not\n# able to load ffmpeg shared libraries:\nexport LD_LIBRARY_PATH=${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH}\n\
-        echo \"::endgroup::\"\n\necho \"::group::Install TorchAudio test and PyTorch\
-        \ dependencies\"\npython -m pip install parameterized requests coverage pytest\
-        \ pytest-cov scipy numpy expecttest\necho \"::endgroup::\"\n\necho \"::group::Install\
-        \ PyTorch and TorchCodec\"\nPYTORCH_WHEEL_INDEX=\"https://download.pytorch.org/whl/${UPLOAD_CHANNEL}/cpu\"\
-        \npython -m pip install --pre torch torchcodec --index-url=\"${PYTORCH_WHEEL_INDEX}\"\
-        \npython -c 'import torch; print(f\"{torch.__version__}\"); print(f\"{torch.__file__}\"\
-        )'\npython -c 'import torchcodec; print(f\"{torchcodec.__version__}\"); print(f\"\
-        {torchcodec.__file__}\")'\necho \"::endgroup::\"\n\necho \"::group::Build\
-        \ and install TorchAudio\"\nexport BUILD_CPP_TEST=1\npython -m pip install\
-        \ . -v --no-build-isolation\necho \"::endgroup::\"\n\necho \"::group::Run\
-        \ TorchAudio C tests\"\n(cd build/temp*/test/cpp && ./wall_collision)\necho\
-        \ \"::endgroup::\"\n\necho \"::group::Run TorchAudio tests\"\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CTC_DECODER=true\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_unidecode=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_inflect=true\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_pytorch_lightning=true\nexport\
-        \ TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_APPLY_CMVN_SLIDING=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_FBANK_FEATS=true\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_KALDI_PITCH_FEATS=true\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_MFCC_FEATS=true\nexport\
-        \ TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_SPECTROGRAM_FEATS=true\nexport\
-        \ TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_KALDI=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CUDA=true\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_HW_ACCEL=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_ON_PYTHON_310=true\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_AUDIO_OUT_DEVICE=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MACOS=true\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_TEMPORARY_DISABLED=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_SOX_DECODER=true\n\
-        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_SOX_ENCODER=true\nexport TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_FFMPEG=true\n\
-        pytest test/torchaudio_unittest -k \"not torchscript and not fairseq and not\
-        \ demucs\" -x\necho \"::endgroup::\"\n"
-      timeout: 120
+      script: |
+        set -ex
+        # Set up Environment Variables
+        export PYTHON_VERSION="${{ matrix.python-version }}"
+        export FFMPEG_VERSION="${{ matrix.ffmpeg-version }}"
+        export PIP_PROGRESS_BAR=off
+        export CONDA_QUIET=1
+
+        # Set UPLOAD_CHANNEL
+        if [[ (${GITHUB_EVENT_NAME} = 'pull_request' && (${GITHUB_BASE_REF} = 'release'*)) || (${GITHUB_REF} = 'refs/heads/release'*) ]]; then
+          export UPLOAD_CHANNEL=test
+        else
+          export UPLOAD_CHANNEL=nightly
+        fi
+
+        echo "::group::Create conda env"
+        git config --global --add safe.directory /__w/audio/audio
+        conda create -c conda-forge --strict-channel-priority -y -n ci_env python="${PYTHON_VERSION}" ffmpeg="${FFMPEG_VERSION}" cmake ninja
+        conda activate ci_env
+        conda info
+        ffmpeg -version
+        python -m pip install --upgrade pip
+        export LD_LIBRARY_PATH=${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH}
+        echo "::endgroup::"
+
+        echo "::group::Install TorchAudio test and PyTorch dependencies"
+        python -m pip install parameterized requests coverage pytest pytest-cov scipy numpy expecttest
+        echo "::endgroup::"
+
+        echo "::group::Install PyTorch and TorchCodec"
+        PYTORCH_WHEEL_INDEX="https://download.pytorch.org/whl/${UPLOAD_CHANNEL}/cpu"
+        python -m pip install --pre torch torchcodec --index-url="${PYTORCH_WHEEL_INDEX}"
+        python -c 'import torch; print(f"{torch.__version__} {torch.__file__}")'
+        python -c 'import torchcodec; print(f"{torchcodec.__version__} {torchcodec.__file__}")'
+        echo "::endgroup::"
+
+        echo "::group::Build and install TorchAudio"
+        export BUILD_CPP_TEST=1
+        python -m pip install . -v --no-build-isolation
+        echo "::endgroup::"
+
+        echo "::group::Run TorchAudio C tests"
+        (cd build/temp*/test/cpp && ./wall_collision)
+        echo "::endgroup::"
+
+        echo "::group::Run TorchAudio Python tests"
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CTC_DECODER=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_unidecode=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_inflect=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MOD_pytorch_lightning=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_APPLY_CMVN_SLIDING=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_FBANK_FEATS=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_KALDI_PITCH_FEATS=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_MFCC_FEATS=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CMD_COMPUTE_SPECTROGRAM_FEATS=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_KALDI=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_CUDA=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_HW_ACCEL=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_ON_PYTHON_310=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_AUDIO_OUT_DEVICE=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_MACOS=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_TEMPORARY_DISABLED=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_SOX_DECODER=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_SOX_ENCODER=true
+        export TORCHAUDIO_TEST_ALLOW_SKIP_IF_NO_FFMPEG=true
+        pytest test/torchaudio_unittest -k "not torchscript and not fairseq and not demucs" -x
+        echo "::endgroup::"
+
+    steps:
+      - name: Start Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: start-measurement
+
+      - name: Run Tests
+        run: echo "Tests executed in the linux_job_v2.yml script"
+
+      - id: record-measurement
+        name: Record Energy Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          label: "Post Test Measurement"
+          task: get-measurement
+
+      - id: display-measurement
+        name: Display Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de
+        with:
+          json-output: true
+          task: display-results
+
+      - name: Save Total Energy Consumption Data
+        run: echo '${{ steps.record-measurement.outputs.data-total-json }}' > total_energy_consumption.json
+
+      - name: Upload Energy Consumption Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: total-energy-consumption
+          path: total_energy_consumption.json
